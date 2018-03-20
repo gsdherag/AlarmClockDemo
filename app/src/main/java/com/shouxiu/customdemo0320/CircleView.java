@@ -39,6 +39,7 @@ public class CircleView extends View {
     private int mPointerColor;
     private Paint mPointPaint;
     private Map<Integer, Point> mMap = new HashMap<>();
+    private Map<Integer, Point> mMinuteMap = new HashMap<>();
     private int mPaddingLeft;
     private int mPaddingRight;
     private int mPaddingTop;
@@ -51,6 +52,8 @@ public class CircleView extends View {
     private int mCenterX;
     private int mCenterY;
     private int mR;
+
+    private boolean isHour = true;
 
     public CircleView(Context context) {
         this(context, null);
@@ -90,8 +93,6 @@ public class CircleView extends View {
         mPointPaint.setColor(mPointerColor);
         mPointPaint.setStrokeWidth(5f);
         mPointPaint.setStyle(Paint.Style.FILL);
-
-
     }
 
     @Override
@@ -145,6 +146,7 @@ public class CircleView extends View {
                 float textX = getTextX(mCenterX, i, mR - DEFAULT_TEXT_MARGIN * 2);
                 float textY = getTextY(mCenterY, i, mR - DEFAULT_TEXT_MARGIN * 2) + measureTextHeight(mTextPaint) / 2;
                 mMap.put(text, new Point(textX, textY));
+
             }
 
             for (int i = -90; i < 360 - 90; i += 30) {
@@ -155,6 +157,11 @@ public class CircleView extends View {
                 float textY = getTextY(mCenterY, i, mR / 2 + DEFAULT_TEXT_MARGIN) + measureTextHeight(mTextPaint) / 2;
 
                 mMap.put(Integer.valueOf(text), new Point(textX, textY));
+
+                String minute = i == -90 ? "00" : (i + 90) / 30 * 5 + "";
+                float textX1 = getTextX(mCenterX, i, mR - DEFAULT_TEXT_MARGIN * 2);
+                float textY2 = getTextY(mCenterY, i, mR - DEFAULT_TEXT_MARGIN * 2) + measureTextHeight(mTextPaint) / 2;
+                mMinuteMap.put(Integer.valueOf(minute), new Point(textX1, textY2));
             }
         }
     }
@@ -176,18 +183,29 @@ public class CircleView extends View {
         //绘制线
         canvas.drawLine(mCenterX, mCenterY, point1.x, point1.y, mPointPaint);
 
-        //绘制外圈文字
-        for (int i = -90; i < 360 - 90; i += 30) {
-            int text = i == -90 ? 12 : i / 30 + 3;
-            Point point = mMap.get(text);
-            canvas.drawText("" + text, point.x, point.y + measureTextHeight(mTextPaint) / 2, mTextPaint);
-        }
+        if (isHour) {
+            //绘制外圈文字
+            for (int i = -90; i < 360 - 90; i += 30) {
+                int text = i == -90 ? 12 : i / 30 + 3;
+                Point point = mMap.get(text);
+                canvas.drawText("" + text, point.x, point.y + measureTextHeight(mTextPaint) / 2, mTextPaint);
+            }
 
-        //绘制内圈文字
-        for (int i = -90; i < 360 - 90; i += 30) {
-            String text = i == -90 ? "00" : i / 30 + 3 + 12 + "";
-            Point point = mMap.get(Integer.valueOf(text));
-            canvas.drawText("" + text, point.x, point.y + measureTextHeight(mTextPaint) / 2, mTextPaint);
+            //绘制内圈文字
+            for (int i = -90; i < 360 - 90; i += 30) {
+                String text = i == -90 ? "00" : i / 30 + 3 + 12 + "";
+                Point point = mMap.get(Integer.valueOf(text));
+                canvas.drawText("" + text, point.x, point.y + measureTextHeight(mTextPaint) / 2, mTextPaint);
+            }
+        } else {
+            //绘制外圈文字
+            for (int i = -90; i < 360 - 90; i += 30) {
+
+                String text = i == -90 ? "00" : i == -60 ? "05" : (i + 90) / 30 * 5 + "";
+                Point point = mMinuteMap.get(Integer.valueOf(text));
+                canvas.drawText("" + text, point.x, point.y + measureTextHeight(mTextPaint) / 2, mTextPaint);
+            }
+
         }
     }
 
@@ -207,7 +225,8 @@ public class CircleView extends View {
                 invalidate();
                 return true;
             case MotionEvent.ACTION_UP:
-
+                isHour = false;
+                invalidate();
                 break;
             default:
                 break;
@@ -269,6 +288,9 @@ public class CircleView extends View {
             } else {
                 an = 6;
             }
+        }
+        if (!isHour){
+            return an;
         }
         if (sqrt > r) {
             return an;
